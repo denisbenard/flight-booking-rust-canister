@@ -1,0 +1,36 @@
+type Booking = record { id : nat64; flight_id : nat64; passenger_id : nat64 };
+type Error = variant {
+  InvalidInput : record { msg : text };
+  NotFound : record { msg : text };
+};
+type Flight = record {
+  id : nat64;
+  destination : text;
+  origin : text;
+  departure_time : nat64;
+  flight_number : text;
+  available_seats : nat32;
+  airline : text;
+  arrival_time : nat64;
+  capacity : nat32;
+};
+type Passenger = record { id : nat64; name : text; email : text };
+type Result = variant { Ok : Flight; Err : Error };
+type Result_1 = variant { Ok : Passenger; Err : Error };
+type Result_2 = variant { Ok : Booking; Err : Error };
+type Result_3 = variant { Ok; Err : Error };
+service : {
+  add_flight : (text, text, text, text, nat64, nat64, nat32) -> (Result);
+  add_passenger : (text, text) -> (Result_1);
+  book_flight : (nat64, nat64) -> (Result_2);
+  cancel_booking : (nat64) -> (Result_3);
+  delete_flight : (nat64) -> (Result_3);
+  delete_passenger : (nat64) -> (Result_3);
+  get_booking : (nat64) -> (Result_2) query;
+  get_flight : (nat64) -> (Result) query;
+  get_passenger : (nat64) -> (Result_1) query;
+  update_flight : (nat64, text, text, text, text, nat64, nat64, nat32) -> (
+      Result,
+    );
+  update_passenger : (nat64, text, text) -> (Result_1);
+}
