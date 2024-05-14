@@ -128,12 +128,11 @@ enum Error {
 // Implement CRUD operations for flights
 #[ic_cdk::update]
 fn add_flight(airline: String, flight_number: String, origin: String, destination: String, departure_time: u64, arrival_time: u64, capacity: u32) -> Result<Flight, Error> {
-    let id = ID_COUNTER
-        .with(|counter| {
-            let current_value = *counter.borrow().get();
-            counter.borrow_mut().set(current_value + 1)
-        })
-        .expect("Cannot increment id counter");
+    let id = ID_COUNTER.with(|counter| {
+        let current_value = *counter.borrow().get();
+        counter.borrow_mut().set(current_value + 1);
+        current_value + 1
+    });
 
     let flight = Flight {
         id,
@@ -164,12 +163,11 @@ fn delete_flight(id: u64) -> Result<(), Error> {
 // Implement CRUD operations for passengers
 #[ic_cdk::update]
 fn add_passenger(name: String, email: String) -> Result<Passenger, Error> {
-    let id = ID_COUNTER
-        .with(|counter| {
-            let current_value = *counter.borrow().get();
-            counter.borrow_mut().set(current_value + 1)
-        })
-        .expect("Cannot increment id counter");
+    let id = ID_COUNTER.with(|counter| {
+        let current_value = *counter.borrow().get();
+        counter.borrow_mut().set(current_value + 1);
+        current_value + 1
+    });
 
     let passenger = Passenger {
         id,
@@ -220,13 +218,23 @@ fn book_flight(flight_id: u64, passenger_id: u64) -> Result<Booking, Error> {
     // Decrement available seats
     let mut updated_flight = flight.clone();
     updated_flight.available_seats -= 1;
-    update_flight(flight_id, updated_flight.airline, updated_flight.flight_number, updated_flight.origin, updated_flight.destination, updated_flight.departure_time, updated_flight.arrival_time, updated_flight.capacity)?;
+    update_flight(
+        flight_id,
+        updated_flight.airline.clone(),
+        updated_flight.flight_number.clone(),
+        updated_flight.origin.clone(),
+        updated_flight.destination.clone(),
+        updated_flight.departure_time,
+        updated_flight.arrival_time,
+        updated_flight.capacity,
+    )?;
 
     // Create booking
     let id = ID_COUNTER.with(|counter| {
         let current_value = *counter.borrow().get();
-        counter.borrow_mut().set(current_value + 1)
-    }).expect("Cannot increment id counter");
+        counter.borrow_mut().set(current_value + 1);
+        current_value + 1
+    });
 
     let booking = Booking {
         id,
@@ -248,7 +256,16 @@ fn cancel_booking(booking_id: u64) -> Result<(), Error> {
             // Increment available seats for the flight
             let mut flight = get_flight(booking.flight_id)?;
             flight.available_seats += 1;
-            update_flight(booking.flight_id, flight.airline, flight.flight_number, flight.origin, flight.destination, flight.departure_time, flight.arrival_time, flight.capacity)?;
+            update_flight(
+                booking.flight_id,
+                flight.airline.clone(),
+                flight.flight_number.clone(),
+                flight.origin.clone(),
+                flight.destination.clone(),
+                flight.departure_time,
+                flight.arrival_time,
+                flight.capacity,
+            )?;
 
             // Remove booking
             BOOKING_STORAGE.with(|storage| storage.borrow_mut().remove(&booking_id));
@@ -371,6 +388,45 @@ fn check_flight_availability(id: u64) -> Result<bool, Error> {
         Ok(flight) => Ok(flight.available_seats > 0),
         Err(e) => Err(e),
     }
+}
+
+// List all flights
+#[ic_cdk::query]
+fn list_all_flights() -> Vec<Flight> {
+    let mut flights = Vec::new();
+    FLIGHT_STORAGE.with(|storage| {
+        let storage = storage.borrow();
+        for (_, flight) in storage.iter() {
+            flights.push(flight.clone());
+        }
+    });
+    flights
+}
+
+// List all passengers
+#[ic_cdk::query]
+fn list_all_passengers() -> Vec<Passenger> {
+    let mut passengers = Vec::new();
+    PASSENGER_STORAGE.with(|storage| {
+        let storage = storage.borrow();
+        for (_, passenger) in storage.iter() {
+            passengers.push(passenger.clone());
+        }
+    });
+    passengers
+}
+
+// List all bookings
+#[ic_cdk::query]
+fn list_all_bookings() -> Vec<Booking> {
+    let mut bookings = Vec::new();
+    BOOKING_STORAGE.with(|storage| {
+        let storage = storage.borrow();
+        for (_, booking) in storage.iter() {
+            bookings.push(booking.clone());
+        }
+    });
+    bookings
 }
 
 // Export the Candid interface
