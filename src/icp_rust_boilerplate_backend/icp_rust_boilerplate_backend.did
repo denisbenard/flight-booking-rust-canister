@@ -19,16 +19,22 @@ type Result = variant { Ok : Flight; Err : Error };
 type Result_1 = variant { Ok : Passenger; Err : Error };
 type Result_2 = variant { Ok : Booking; Err : Error };
 type Result_3 = variant { Ok; Err : Error };
+type Result_4 = variant { Ok : bool; Err : Error };
 service : {
   add_flight : (text, text, text, text, nat64, nat64, nat32) -> (Result);
   add_passenger : (text, text) -> (Result_1);
   book_flight : (nat64, nat64) -> (Result_2);
   cancel_booking : (nat64) -> (Result_3);
+  check_flight_availability : (nat64) -> (Result_4) query;
   delete_flight : (nat64) -> (Result_3);
   delete_passenger : (nat64) -> (Result_3);
   get_booking : (nat64) -> (Result_2) query;
   get_flight : (nat64) -> (Result) query;
   get_passenger : (nat64) -> (Result_1) query;
+  list_all_bookings : () -> (vec Booking) query;
+  list_all_flights : () -> (vec Flight) query;
+  list_all_passengers : () -> (vec Passenger) query;
+  search_flights : (text) -> (vec Flight) query;
   update_flight : (nat64, text, text, text, text, nat64, nat64, nat32) -> (
       Result,
     );
